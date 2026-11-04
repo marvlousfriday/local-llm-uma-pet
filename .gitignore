@@ -1,0 +1,26 @@
+# 依赖与产物
+venv/
+__pycache__/
+*.pyc
+*.log
+
+# 上游源码（自行 clone，不入库）
+src/
+src40/
+tools/
+models/
+
+# WPF 构建产物
+bin/
+obj/
+*.exe
+*.pdb
+*.bak
+
+# 试听音频
+*.wav
+
+# 编辑器
+.vs/
+.vscode/
+.idea/

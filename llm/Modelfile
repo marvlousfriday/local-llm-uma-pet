@@ -1,0 +1,25 @@
+FROM qwen3.5:9b
+
+# ---- 显存预算（RTX 3060 Ti 8GB，实测）----
+# 权重 5.24GB + 视觉塔 0.86GB = 6.10GB 固定
+# 16K 上下文实测 7749 MiB / 100% GPU / 63 tok/s  ← 默认
+# 32K 上下文实测 7851 MiB / 100% GPU / 48 tok/s  ← 见 qwen9b32k
+# 32K 只剩约 340MB 余量，浏览器一开硬件加速就可能被挤出显存
+PARAMETER num_ctx 16384
+
+# 全部层交给 GPU（层数不够时 ollama 会自动溢出到 CPU）
+PARAMETER num_gpu 99
+
+# 单次生成上限，防止思考链无限长
+PARAMETER num_predict 2048
+
+# Qwen3.5 官方推荐采样参数（非思考场景）
+PARAMETER temperature 0.7
+PARAMETER top_p 0.8
+PARAMETER top_k 20
+PARAMETER min_p 0.0
+PARAMETER repeat_penalty 1.05
+
+SYSTEM """你是一个中文技术助手。回答直接、准确，先给结论再给理由。
+不编造不存在的命令或参数；不确定时明确说不确定。
+代码和命令用代码块给出，可执行、无占位符。"""
