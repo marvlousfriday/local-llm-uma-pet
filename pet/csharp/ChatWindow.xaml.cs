@@ -42,14 +42,18 @@ namespace DesktopGremlin
         private static string _persona = DefaultPersona;
 
         /// <summary>
-        /// 从程序目录的 persona.txt 读取人设，没有就用内置默认。
+        /// 按当前角色读取 persona_<角色名>.txt，找不到才回退 persona.txt。
         /// 注意：必须保留 [中]/[日] 两行格式约定，否则程序无法拆分显示与朗读。
         /// </summary>
         private static void LoadPersona()
         {
             try
             {
-                string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "persona.txt");
+                string dir = AppDomain.CurrentDomain.BaseDirectory;
+                string ch = Settings.StartingChar;
+                string path = Path.Combine(dir, "persona_" + ch + ".txt");
+                if (string.IsNullOrEmpty(ch) || !File.Exists(path))
+                    path = Path.Combine(dir, "persona.txt");
                 if (!File.Exists(path)) return;
 
                 string text = File.ReadAllText(path).Trim();

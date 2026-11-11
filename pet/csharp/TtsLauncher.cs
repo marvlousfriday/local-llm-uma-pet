@@ -25,6 +25,26 @@ namespace DesktopGremlin
             catch { }
         }
 
+        /// <summary>
+        /// 桌宠角色目录名 -> VITS 模型目录名。
+        /// 新角色只要模型目录同名即可自动生效；Doto 是历史目录名，映射到 MeishoDoto。
+        /// 模型不存在时回退 MeishoDoto，避免服务起不来。
+        /// </summary>
+        private static string TtsModelName(string script)
+        {
+            string ch = Settings.StartingChar;
+            if (string.IsNullOrEmpty(ch)) return "MeishoDoto";
+            string model = ch.Equals("Doto", StringComparison.OrdinalIgnoreCase)
+                ? "MeishoDoto" : ch;
+            string dir = Path.Combine(Path.GetDirectoryName(script) ?? "", "models", model);
+            if (!Directory.Exists(dir))
+            {
+                Log("找不到音色模型 " + dir + "，回退 MeishoDoto");
+                return "MeishoDoto";
+            }
+            return model;
+        }
+
         public static void EnsureRunning()
         {
             string py = Settings.TtsPython;
@@ -54,6 +74,7 @@ namespace DesktopGremlin
                     psi.FileName = py;
                     psi.Arguments = "\"" + script + "\" --port 9880 --idle " +
                                     (Settings.TtsIdle > 0 ? Settings.TtsIdle : 1800) +
+                                    " --char \"" + TtsModelName(script) + "\"" +
                                     " --parent-pid " + Process.GetCurrentProcess().Id;
                     psi.WorkingDirectory = Path.GetDirectoryName(script);
                     psi.UseShellExecute = false;

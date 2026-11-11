@@ -1,0 +1,74 @@
+UMAVIEWER RECORDING SETTINGS
+============================
+
+Screenshot panel:
+  Width x Height : 1024 x 1024
+  Transparent    : CHECKED
+  Sequence fps   : 30          <-- panel default 120 is WRONG
+  Button         : "Record PNG Sequence"  (NOT "Record GIF")
+
+Why 1024: the pet draws a 325px cell at roughly 270-300px on screen. A 1024
+recording gives about 2x supersampling before downsampling. 1536/2048 gain
+nothing (every frame still ends up in a 325px cell) and multiply file size.
+
+Why fps 30: the pet's SPRITE_FRAMERATE is 30. At 120 fps the same clip becomes
+4x the frames and the pet plays it 4x SLOWER, with 4x the disk usage.
+
+Why PNG Sequence: true colour + 8-bit alpha instead of GIF's 256-colour palette
+and on/off transparency. Measured edge sharpness 4.53 (512 GIF) -> 6.73 (1024
+PNG), with no palette dithering or black halos.
+
+INPUT
+  Point build_sheets.bat at @UMAVIEWER_DIR@\build\StandaloneWindows64\Screenshots
+  (or pass any folder as the first CLI argument of gif_to_sheet.py).
+
+NAMING
+  Single file  : idle.gif / walkDown.png / emote1.webp ...
+  PNG sequence : FOLDER named after the action, containing 0000.png, 0001.png ...
+                 UmaViewer creates UmaViewer_<timestamp>/ - RENAME it right
+                 after each recording (idle, hover, runRight, ...), otherwise
+                 the converter ignores it and you cannot tell clips apart.
+  however.gif is accepted as hover.gif. Names are case-insensitive;
+  underscores and dashes are ignored.
+
+Actions : idle intro outro click grab hover sleep runIdle pat
+Run     : runUp runDown runLeft runRight upLeft upRight downLeft downRight
+Walk    : walkUp walkDown walkLeft walkRight
+Emotes  : emote1 emote2 emote3 emote4
+
+IMPORTANT: record ALL actions at the SAME resolution and the SAME camera
+distance. The converter uses one shared crop box for everything; mixing
+resolutions or framing makes it warn and misalign some actions.
+
+ANIMATION NAMES / FRAME-COUNT FINGERPRINT
+  UmaViewer's Animation panel shows RAW AnimationClip names - internal English
+  IDs like Idle01, RunSlowA, Garden_01001_0101_loop. There is NO Chinese or
+  Japanese localization for animation names and NO language switch for them.
+  Config.json > Language (0 = En, 1 = Jp) only changes CHARACTER names
+  ("Affects Uma names on the list").
+
+  Use FRAME COUNT as the fingerprint. The Animation panel progress shows total
+  frames; the recorder captures clipLength * frameRate frames:
+
+    idle 待机 369 | click 点击 134 | sleep 睡觉 79 | runIdle 跑待机 61
+    intro 登场 50 | hover 悬停 42 | grab 抓取 5
+    walkUp/Down/Left/Right 各 30 | run 8 directions 各 18
+
+  The 8 run clips and 4 walk clips share a frame count - distinguish them by
+  pose (front / back / side) or simply re-record in the same order as before.
+
+CONVERTER
+  python gif_to_sheet.py <recordings_dir> <character_dir> [--no-fill]
+
+  Frames are streamed (1024px long clips will not exhaust memory). All frames
+  share one crop box so the character does not pulse in size. Fits the cell?
+  1:1 paste, no resampling. Larger? LANCZOS downsample. 3px colour bleed
+  outside the silhouette + a light unsharp mask. Left/right pairs auto-mirror.
+  A single still image becomes a 12-frame breathing loop. config.txt frame
+  counts are updated for rebuilt actions.
+
+  --no-fill    keep placeholder sheets for actions without a recording
+  (default)    fill them with the new character's idle frames
+  --no-sharpen disable the unsharp mask
+  --crop X,Y,W,H  crop source frames that contain UI panels
+  --cell N / --col N  override cell size / grid columns
